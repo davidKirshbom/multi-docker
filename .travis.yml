@@ -1,0 +1,21 @@
+sudo: required
+services: -docker
+
+before_install:
+  - docker build -t davkir/react-test -f .client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true davkir/react-test npm test
+
+after_success:
+  - docker build -t davkir/multi-client ./client
+  - docker build -t davkir/multi-nginx ./nginx
+  - docker build -t davkir/multi-server ./server
+  - docker build -t davkir/multi-worker ./worker
+  #log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  # take images and push to docker hub
+  - docker push davkir/multi-client
+  - docker push davkir/multi-nginx
+  - docker push davkir/multi-server
+  - docker push davkir/multi-worker
